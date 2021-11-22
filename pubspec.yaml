@@ -1,0 +1,35 @@
+name: qr_code_scanner2
+description: A new flutter plugin project.
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.20.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  image_picker: ^0.8.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+
+  plugin:
+    platforms:
+      android:
+        package: com.lynkmyu.qr_code_scanner2
+        pluginClass: QrCodeScanner2Plugin
+      ios:
+        pluginClass: QrCodeScanner2Plugin
+
+ 
+  assets:
+    - assets/tool_img.png
+    - assets/tool_qrcode.png
+    - assets/tool_flashlight_close.png
+    - assets/tool_flashlight_open.png
+ 
