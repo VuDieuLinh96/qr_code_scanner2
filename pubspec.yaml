@@ -32,4 +32,6 @@ flutter:
     - assets/tool_qrcode.png
     - assets/tool_flashlight_close.png
     - assets/tool_flashlight_open.png
+    - assets/flash_on.png
+    - assets/flash_off.png
  

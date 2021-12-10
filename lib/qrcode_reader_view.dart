@@ -103,21 +103,21 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
   @override
   Widget build(BuildContext context) {
     final flashOpen = Image.asset(
-      "assets/tool_flashlight_open.png",
+      "assets/flash_on.png",
       package: "qr_code_scanner2",
-      width: 35,
-      height: 35,
+      width: 16,
+      height: 16,
       color: Colors.white,
     );
     final flashClose = Image.asset(
-      "assets/tool_flashlight_close.png",
+      "assets/flash_off.png",
       package: "qr_code_scanner2",
-      width: 35,
-      height: 35,
+      width: 16,
+      height: 16,
       color: Colors.white,
     );
-    return Material(
-      child: LayoutBuilder(builder: (context, constraints) {
+    return Scaffold(
+      body: LayoutBuilder(builder: (context, constraints) {
         final qrScanSize = constraints.maxWidth * widget.scanBoxRatio!;
         // ignore: unused_local_variable
         final mediaQuery = MediaQuery.of(context);
@@ -125,6 +125,7 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
           print("1.5");
         }
         return Stack(
+          fit: StackFit.expand,
           children: <Widget>[
             SizedBox(
               width: constraints.maxWidth,
@@ -176,14 +177,23 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
               ),
             ),
             Positioned(
-              top: (constraints.maxHeight - qrScanSize) / 2 + qrScanSize + 40,
+              top: (constraints.maxHeight - qrScanSize) / 2 + qrScanSize + 50,
               width: constraints.maxWidth,
               child: Align(
                 alignment: Alignment.center,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: setFlashlight,
-                  child: openFlashlight! ? flashOpen : flashClose,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.2),
+                  ),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: setFlashlight,
+                    child: openFlashlight! ? flashOpen : flashClose,
+                  ),
                 ),
               ),
             ),
