@@ -138,17 +138,6 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
             ),
             if (widget.headerWidget != null) widget.headerWidget!,
             Positioned(
-              top: (constraints.maxHeight - qrScanSize) / 3 + 30,
-              width: constraints.maxWidth,
-              child: Align(
-                alignment: Alignment.center,
-                child: DefaultTextStyle(
-                  style: TextStyle(color: Colors.white),
-                  child: widget.helpWidget ?? Text("Quét mã QR của sản phẩm"),
-                ),
-              ),
-            ),
-            Positioned(
               child: Align(
                 alignment: Alignment.center,
                 child: Container(
@@ -164,7 +153,18 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
               ),
             ),
             Positioned(
-              top: (constraints.maxHeight - qrScanSize) / 2 + qrScanSize + 10,
+              top: (constraints.maxHeight - qrScanSize) / 3 + 30,
+              width: constraints.maxWidth,
+              child: Align(
+                alignment: Alignment.center,
+                child: DefaultTextStyle(
+                  style: TextStyle(color: Colors.white),
+                  child: widget.helpWidget ?? Text("Quét mã QR của sản phẩm"),
+                ),
+              ),
+            ),
+            Positioned(
+              top: (constraints.maxHeight - qrScanSize) / 2 + qrScanSize + 20,
               width: constraints.maxWidth,
               child: Align(
                 alignment: Alignment.center,
@@ -176,7 +176,7 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
               ),
             ),
             Positioned(
-              top: (constraints.maxHeight - qrScanSize) / 2 + qrScanSize + 50,
+              top: (constraints.maxHeight - qrScanSize) / 2 + qrScanSize + 60,
               width: constraints.maxWidth,
               child: Align(
                 alignment: Alignment.center,
@@ -365,8 +365,8 @@ class QrScanBoxPainter extends ShapeBorder {
   @override
   void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
     final offsetX = rect.width * _OFFSET_X_FACTOR;
-    final cardWidth = rect.width - _CARD_ASPECT_RATIO * offsetX;
-    final cardHeight = rect.width - _CARD_ASPECT_RATIO * offsetX;
+    final cardWidth = rect.width - _CARD_ASPECT_RATIO * offsetX + 15;
+    final cardHeight = rect.width - _CARD_ASPECT_RATIO * offsetX + 5;
     final offsetY = (rect.height - cardHeight) / 2;
 
     final backgroundPaint = Paint()
