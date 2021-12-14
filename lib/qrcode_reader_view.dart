@@ -26,7 +26,7 @@ class QrcodeReaderView extends StatefulWidget {
 }
 
 class QrcodeReaderViewState extends State<QrcodeReaderView>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late QrReaderViewController _controller;
   late AnimationController _animationController;
   bool? openFlashlight;
@@ -34,9 +34,36 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
 
   @override
   void initState() {
+    WidgetsBinding.instance!.addObserver(this);
     super.initState();
     openFlashlight = false;
     _initAnimation();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        print("app in resumed");
+        break;
+      case AppLifecycleState.inactive:
+        print("app in inactive");
+        break;
+      case AppLifecycleState.paused:
+        print("app in paused");
+        break;
+      case AppLifecycleState.detached:
+        print("app in detached");
+        break;
+    }
+    super.didChangeAppLifecycleState(state);
+  }
+
+  @override
+  void didChangeDependencies() {
+    openFlashlight = false;
+    setState(() {});
+    super.didChangeDependencies();
   }
 
   void _initAnimation() {
@@ -93,6 +120,11 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
 
   void stopScan() {
     _clearAnimation();
+    openFlashlight = false;
+    setState(() {
+      setFlashlight();
+    });
+
     _controller.stopCamera();
   }
 
@@ -224,6 +256,7 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
   @override
   void dispose() {
     _clearAnimation();
+    openFlashlight = false;
     super.dispose();
   }
 }

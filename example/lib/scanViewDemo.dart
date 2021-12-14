@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner2/qrcode_reader_view.dart';
+import 'package:qr_code_scanner2_example/test.dart';
 
 class ScanViewDemo extends StatefulWidget {
   ScanViewDemo({Key? key}) : super(key: key);
@@ -31,21 +32,23 @@ class _ScanViewDemoState extends State<ScanViewDemo> {
   }
 
   Future onScan(String data) async {
-    await showCupertinoDialog(
-      context: context,
-      builder: (context) {
-        return CupertinoAlertDialog(
-          title: Text("Ket qua"),
-          content: Text(data),
-          actions: <Widget>[
-            CupertinoDialogAction(
-              child: Text("dong y"),
-              onPressed: () => Navigator.pop(context),
-            )
-          ],
-        );
-      },
-    );
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (context) => TestScreen()));
+    // await showCupertinoDialog(
+    //   context: context,
+    //   builder: (context) {
+    //     return CupertinoAlertDialog(
+    //       title: Text("Ket qua"),
+    //       content: Text(data),
+    //       actions: <Widget>[
+    //         CupertinoDialogAction(
+    //           child: Text("dong y"),
+    //           onPressed: () => Navigator.pop(context),
+    //         )
+    //       ],
+    //     );
+    //   },
+    // );
     _key.currentState!.startScan();
   }
 
