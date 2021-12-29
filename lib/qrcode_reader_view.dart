@@ -93,10 +93,12 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
 
   void stopScan() {
     _clearAnimation();
-    openFlashlight = false;
-    setState(() {
-      setFlashlight();
-    });
+    if (openFlashlight == true) {
+      openFlashlight = false;
+      setState(() {
+        setFlashlight();
+      });
+    }
 
     _controller.stopCamera();
   }
