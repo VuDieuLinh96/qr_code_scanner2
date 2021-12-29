@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flustars/flustars.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -39,8 +40,8 @@ class QrReaderView extends StatefulWidget {
     required this.callback,
     this.autoFocusIntervalInMs,
     this.torchEnabled = true,
-    this.width = 500,
-    this.height = 500,
+    required this.width,
+    required this.height,
   }) : super(key: key);
 
   @override
@@ -103,7 +104,8 @@ class QrReaderViewController {
   final int id;
   final MethodChannel _channel;
   QrReaderViewController(this.id)
-      : _channel = MethodChannel('com.lynkmyu.qr_code_scanner2.reader_view_$id') {
+      : _channel =
+            MethodChannel('com.lynkmyu.qr_code_scanner2.reader_view_$id') {
     _channel.setMethodCallHandler(_handleMessages);
   }
   ReadChangeBack? onQrBack;

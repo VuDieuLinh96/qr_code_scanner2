@@ -26,7 +26,7 @@ class QrcodeReaderView extends StatefulWidget {
 }
 
 class QrcodeReaderViewState extends State<QrcodeReaderView>
-    with TickerProviderStateMixin, WidgetsBindingObserver {
+    with TickerProviderStateMixin {
   late QrReaderViewController _controller;
   late AnimationController _animationController;
   bool? openFlashlight;
@@ -34,36 +34,9 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
 
   @override
   void initState() {
-    WidgetsBinding.instance!.addObserver(this);
     super.initState();
     openFlashlight = false;
     _initAnimation();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    switch (state) {
-      case AppLifecycleState.resumed:
-        print("app in resumed");
-        break;
-      case AppLifecycleState.inactive:
-        print("app in inactive");
-        break;
-      case AppLifecycleState.paused:
-        print("app in paused");
-        break;
-      case AppLifecycleState.detached:
-        print("app in detached");
-        break;
-    }
-    super.didChangeAppLifecycleState(state);
-  }
-
-  @override
-  void didChangeDependencies() {
-    openFlashlight = false;
-    setState(() {});
-    super.didChangeDependencies();
   }
 
   void _initAnimation() {
@@ -129,8 +102,9 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
   }
 
   Future<bool?> setFlashlight() async {
-    openFlashlight = await _controller.setFlashlight();
-    setState(() {});
+    setState(() async {
+      openFlashlight = await _controller.setFlashlight();
+    });
     return openFlashlight;
   }
 
@@ -159,16 +133,11 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
           print("1.5");
         }
         return Stack(
-          fit: StackFit.expand,
           children: <Widget>[
-            SizedBox(
+            QrReaderView(
               width: constraints.maxWidth,
               height: constraints.maxHeight,
-              child: QrReaderView(
-                width: constraints.maxWidth,
-                height: constraints.maxHeight,
-                callback: _onCreateController,
-              ),
+              callback: _onCreateController,
             ),
             widget.isAnimation
                 ? Positioned(
@@ -256,7 +225,7 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
   @override
   void dispose() {
     _clearAnimation();
-    openFlashlight = false;
+    _controller.stopCamera();
     super.dispose();
   }
 }
