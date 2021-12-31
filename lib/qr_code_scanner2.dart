@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:flustars/flustars.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -12,17 +11,13 @@ class QrCodeScanner2 {
   static const MethodChannel _channel =
       const MethodChannel('com.lynkmyu.qr_code_scanner2');
 
-  static Future<String?> imgScan(File file) async {
-    if (file.existsSync() == false) {
-      return null;
-    }
+  static Future<String> imgScan(String path) async {
     try {
-      final rest =
-          await _channel.invokeMethod("imgQrCode", {"file": file.path});
+      final rest = await _channel.invokeMethod("imgQrCode", {"file": path});
       return rest;
     } catch (e) {
-      print(e);
-      return null;
+      debugPrint(e.toString());
+      return '';
     }
   }
 }
@@ -30,18 +25,18 @@ class QrCodeScanner2 {
 class QrReaderView extends StatefulWidget {
   final Function(QrReaderViewController) callback;
 
-  final int? autoFocusIntervalInMs;
-  final bool? torchEnabled;
-  final double? width;
-  final double? height;
+  final int autoFocusIntervalInMs;
+  final bool torchEnabled;
+  final double width;
+  final double height;
 
   const QrReaderView({
     Key? key,
-    required this.callback,
-    this.autoFocusIntervalInMs,
-    this.torchEnabled = true,
     required this.width,
     required this.height,
+    required this.callback,
+    this.autoFocusIntervalInMs = 500,
+    this.torchEnabled = false,
   }) : super(key: key);
 
   @override
@@ -55,8 +50,8 @@ class _QrReaderViewState extends State<QrReaderView> {
       return AndroidView(
         viewType: "com.lynkmyu.qr_code_scanner2.reader_view",
         creationParams: {
-          "width": (widget.width! * window.devicePixelRatio).floor(),
-          "height": (widget.height! * window.devicePixelRatio).floor(),
+          "width": (widget.width * window.devicePixelRatio).floor(),
+          "height": (widget.height * window.devicePixelRatio).floor(),
           "extra_focus_interval": widget.autoFocusIntervalInMs,
           "extra_torch_enabled": widget.torchEnabled,
         },
@@ -113,14 +108,13 @@ class QrReaderViewController {
   Future _handleMessages(MethodCall call) async {
     switch (call.method) {
       case "onQRCodeRead":
-        // ignore: deprecated_member_use
         final points = <Offset>[];
         if (call.arguments.containsKey("points")) {
           final pointsStrs = call.arguments["points"];
           for (String point in pointsStrs) {
             final a = point.split(",");
             points.add(
-                Offset(double.tryParse(a.first)!, double.tryParse(a.last)!));
+                Offset(double.tryParse(a.first) ?? 0, double.tryParse(a.last) ?? 0));
           }
         }
 

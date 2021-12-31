@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.PluginRegistry;
@@ -24,16 +25,16 @@ public class QrReaderView implements PlatformView, QRCodeReaderView.OnQRCodeRead
     private final MethodChannel mMethodChannel;
     private final Context mContext;
     private Map<String, Object> mParams;
-    private PluginRegistry.Registrar mRegistrar;
+    BinaryMessenger binaryMessenger;
     QRCodeReaderView _view;
 
     public static String EXTRA_FOCUS_INTERVAL = "extra_focus_interval";
     public static String EXTRA_TORCH_ENABLED = "extra_torch_enabled";
 
-    public QrReaderView(Context context, PluginRegistry.Registrar registrar, int id, Map<String, Object> params){
+    public QrReaderView(Context context, BinaryMessenger binaryMessenger, int id, Map<String, Object> params){
         this.mContext = context;
         this.mParams = params;
-        this.mRegistrar = registrar;
+        this.binaryMessenger = binaryMessenger;
 
         int width = (int) mParams.get("width");
         int height = (int) mParams.get("height");
@@ -43,11 +44,11 @@ public class QrReaderView implements PlatformView, QRCodeReaderView.OnQRCodeRead
         _view.setOnQRCodeReadListener(this);
         _view.setQRDecodingEnabled(true);
         _view.forceAutoFocus();
-        int interval = 2000;
+        int interval = mParams.containsKey(EXTRA_FOCUS_INTERVAL) ? (int) mParams.get(EXTRA_FOCUS_INTERVAL) : 2000;
         _view.setAutofocusInterval(interval);
-        _view.setTorchEnabled(true);
+        _view.setTorchEnabled((boolean) mParams.get(EXTRA_TORCH_ENABLED));
 
-        mMethodChannel = new MethodChannel(registrar.messenger(), "com.lynkmyu.qr_code_scanner2.reader_view_" + id);
+        mMethodChannel = new MethodChannel(binaryMessenger, "com.lynkmyu.qr_code_scanner2.reader_view_" + id);
         mMethodChannel.setMethodCallHandler(this);
     }
 
@@ -60,7 +61,7 @@ public class QrReaderView implements PlatformView, QRCodeReaderView.OnQRCodeRead
     public void dispose() {
         _view = null;
         mParams = null;
-        mRegistrar = null;
+       
     }
 
     @Override
@@ -86,9 +87,11 @@ public class QrReaderView implements PlatformView, QRCodeReaderView.OnQRCodeRead
                 break;
             case "startCamera":
                 _view.startCamera();
+                result.success(true);
                 break;
             case "stopCamera":
                 _view.stopCamera();
+                result.success(true);
                 break;
         }
 

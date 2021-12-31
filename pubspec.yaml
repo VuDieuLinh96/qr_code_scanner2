@@ -1,6 +1,6 @@
 name: qr_code_scanner2
 description: A new flutter plugin project.
-version: 0.0.5
+version: 0.0.6
 homepage: https://github.com/VuDieuLinh96/qr_code_scanner2
 
 environment:
@@ -36,4 +36,6 @@ flutter:
     - assets/tool_flashlight_open.png
     - assets/flash_on.png
     - assets/flash_off.png
+    - assets/cbimage.png
+    - assets/gallery.png
  

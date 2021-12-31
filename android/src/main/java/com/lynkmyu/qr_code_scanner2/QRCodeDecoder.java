@@ -1,7 +1,9 @@
 package com.lynkmyu.qr_code_scanner2;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.util.Log;
 
 import com.google.zxing.BarcodeFormat;
@@ -20,8 +22,13 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import com.lynkmyu.qr_code_scanner2.reader.MyMultiFormatReader;
+
 public class QRCodeDecoder {
+    private static Context context;
     public static final Map<DecodeHintType, Object> HINTS = new EnumMap<>(DecodeHintType.class);
+    private static final String TAG = "QRCodeDecoder";
+
     static {
         List<BarcodeFormat> allFormats = new ArrayList<>();
         allFormats.add(BarcodeFormat.AZTEC);
@@ -48,43 +55,47 @@ public class QRCodeDecoder {
     private QRCodeDecoder() {
     }
 
-    public static String syncDecodeQRCode(String picturePath) {
-        return syncDecodeQRCode(getDecodeAbleBitmap(picturePath));
+    public static String syncDecodeQRCode(Context context, String picturePath) {
+        return syncDecodeQRCode(context, getDecodeAbleBitmap(picturePath));
     }
 
-    public static String syncDecodeQRCode(Bitmap bitmap) {
+    public static String syncDecodeQRCode(Context context, Bitmap bitmap) {
+        QRCodeDecoder.context = context;
         Result result = null;
-        RGBLuminanceSource source = null;
+        MyMultiFormatReader multiFormatReader = new MyMultiFormatReader();
+        multiFormatReader.setHints(HINTS);
         try {
             int width = bitmap.getWidth();
             int height = bitmap.getHeight();
+            
             int[] pixels = new int[width * height];
             bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
-            source = new RGBLuminanceSource(width, height, pixels);
-            result = new MultiFormatReader().decode(new BinaryBitmap(new HybridBinarizer(source)), HINTS);
+
+            RGBLuminanceSource source = new RGBLuminanceSource(width, height, pixels);
+            BinaryBitmap bitmap1 = new BinaryBitmap(new HybridBinarizer(source));
+            result = multiFormatReader.decodeWithState(bitmap1);
+            Log.i(TAG, "syncDecodeQRCode: " + result);
             return result.getText();
         } catch (Exception e) {
-            if (source != null) {
-                try {
-                    result = new MultiFormatReader().decode(new BinaryBitmap(new GlobalHistogramBinarizer(source)), HINTS);
-                    return result.getText();
-                } catch (Throwable e2) {
-                    MultiFormatReader multiFormatReader = new MultiFormatReader();
-                    try {
-                        LuminanceSource invertedSource = source.invert();
-                        BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(invertedSource));
+            e.printStackTrace();
+            multiFormatReader.reset();
+            try {
+                Matrix matrix = new Matrix();
+                matrix.setRotate(90);
+               
+                Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
+                        bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                int width = resizedBitmap.getWidth();
+                int height = resizedBitmap.getHeight();
+                Log.i(TAG, "syncDecodeQRCode: " + width + "--" + height);
 
-                        result = multiFormatReader.decode(binaryBitmap, HINTS);
-                        return result.getText();
-                    } catch (NotFoundException exception) {
-                        e.printStackTrace();
-                        e2.printStackTrace();
-                        exception.printStackTrace();
-                        return null;
-                    } finally {
-                        multiFormatReader.reset();
-                    }
-                }
+                int[] pixels = new int[width * height];
+                resizedBitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+                RGBLuminanceSource source = new RGBLuminanceSource(width, height, pixels);
+                result = multiFormatReader.decode(new BinaryBitmap(new HybridBinarizer(source)), HINTS);
+                return result.getText();
+            } catch (Throwable e2) {
+                e2.printStackTrace();
             }
             return null;
         }
@@ -95,15 +106,19 @@ public class QRCodeDecoder {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             BitmapFactory.decodeFile(picturePath, options);
-            int sampleSize = options.outHeight / 400;
+            int sampleSize = options.outWidth / 400;
             if (sampleSize <= 0) {
                 sampleSize = 1;
             }
             options.inSampleSize = sampleSize;
             options.inJustDecodeBounds = false;
-            return BitmapFactory.decodeFile(picturePath, options);
+            Bitmap bitmap = BitmapFactory.decodeFile(picturePath, options);
+            Matrix matrix = new Matrix();
+            matrix.setRotate(90);
+            Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
+                    bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            return resizedBitmap;
         } catch (Exception e) {
-            Log.d("QR", "NOT FOUND INVERTED");
             return null;
         }
     }

@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:qr_code_scanner2/qr_code_scanner2.dart';
 
 class QrcodeReaderView extends StatefulWidget {
@@ -110,20 +113,33 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
     return openFlashlight;
   }
 
+  Future _scanImage() async {
+    stopScan();
+    // ignore: deprecated_member_use
+    var image = await ImagePicker().getImage(source: ImageSource.gallery);
+    if (image == null) {
+      startScan();
+      return;
+    }
+    final rest = await QrCodeScanner2.imgScan(image.path);
+    await widget.onScan(rest);
+    startScan();
+  }
+
   @override
   Widget build(BuildContext context) {
     final flashOpen = Image.asset(
       "assets/flash_on.png",
       package: "qr_code_scanner2",
-      width: 16,
-      height: 16,
+      width: ScreenUtil.getInstance().getWidth(16.0),
+      height: ScreenUtil.getInstance().getHeight(16.0),
       color: Colors.white,
     );
     final flashClose = Image.asset(
       "assets/flash_off.png",
       package: "qr_code_scanner2",
-      width: 16,
-      height: 16,
+      width: ScreenUtil.getInstance().getWidth(16.0),
+      height: ScreenUtil.getInstance().getHeight(16.0),
       color: Colors.white,
     );
     return Scaffold(
@@ -201,22 +217,45 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
               top: (constraints.maxHeight - qrScanSize) / 2 + qrScanSize + 60,
               width: constraints.maxWidth,
               child: Align(
-                alignment: Alignment.center,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.2),
-                  ),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: setFlashlight,
-                    child: openFlashlight! ? flashOpen : flashClose,
-                  ),
-                ),
-              ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        width: ScreenUtil.getInstance().getWidth(64.0),
+                        height: ScreenUtil.getInstance().getHeight(64.0),
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTap: _scanImage,
+                          child: Image.asset(
+                            "assets/tool_img.png",
+                            package: "qr_code_scanner2",
+                            width: 32,
+                            height: 32,
+                            color: Colors.white54,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: ScreenUtil.getInstance().getWidth(32.0),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        width: ScreenUtil.getInstance().getWidth(56.0),
+                        height: ScreenUtil.getInstance().getHeight(56.0),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.2),
+                        ),
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTap: setFlashlight,
+                          child: openFlashlight! ? flashOpen : flashClose,
+                        ),
+                      ),
+                    ],
+                  )),
             ),
           ],
         );
