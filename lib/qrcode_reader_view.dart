@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flustars/flustars.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_code_scanner2/qr_code_scanner2.dart';
 
 class QrcodeReaderView extends StatefulWidget {
@@ -29,45 +29,81 @@ class QrcodeReaderView extends StatefulWidget {
 }
 
 class QrcodeReaderViewState extends State<QrcodeReaderView>
-    with TickerProviderStateMixin {
-  late QrReaderViewController _controller;
-  late AnimationController _animationController;
-  bool? openFlashlight;
+    with TickerProviderStateMixin, WidgetsBindingObserver {
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  QrReaderViewController? _controller;
+  AnimationController? _animationController;
+  bool openFlashlight = false;
   Timer? _timer;
+  bool _init = false;
+  bool _showPermission = true;
+  bool _showScanView = false;
+
+  Completer<bool>? permissionCompleter;
 
   @override
   void initState() {
     super.initState();
-    openFlashlight = false;
-    _initAnimation();
+    WidgetsBinding.instance!.addObserver(this);
+    showScanView();
+  }
+
+  Future showScanView() async {
+    // if (true == await permission()) {
+    await Future.delayed(Duration(milliseconds: 300));
+    setState(() {
+      _init = true;
+      _showPermission = false;
+      _showScanView = true;
+    });
+    // } else {
+    //   setState(() {
+    //     _init = true;
+    //     _showScanView = false;
+    //     _showPermission = true;
+    //   });
+    // }
+  }
+
+  // Future<bool> permission() async {
+  //   final status = await Permission.camera.status;
+  //   print('linhhhhhhhhh ' + status.isGranted.toString());
+  //   return status.isGranted;
+  // }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed && permissionCompleter != null) {
+      // permissionCompleter!.complete(await permission());
+    }
   }
 
   void _initAnimation() {
-    setState(() {
-      _animationController = AnimationController(
-          vsync: this, duration: Duration(milliseconds: 1000));
-    });
-    _animationController
+    _animationController = AnimationController(
+        vsync: this, duration: Duration(milliseconds: 1000));
+
+    _animationController!
       ..addListener(_upState)
       ..addStatusListener((state) {
         if (state == AnimationStatus.completed) {
           _timer = Timer(Duration(seconds: 1), () {
-            _animationController.reverse(from: 1.0);
+            _animationController?.reverse(from: 1.0);
           });
         } else if (state == AnimationStatus.dismissed) {
           _timer = Timer(Duration(seconds: 1), () {
-            _animationController.forward(from: 0.0);
+            _animationController?.forward(from: 0.0);
           });
         }
       });
-    _animationController.forward(from: 0.0);
+    _animationController!.forward(from: 0.0);
   }
 
   void _clearAnimation() {
     _timer?.cancel();
     // ignore: unnecessary_null_comparison
     if (_animationController != null) {
-      _animationController.dispose();
+      _animationController?.dispose();
+      _animationController = null;
     }
   }
 
@@ -77,7 +113,7 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
 
   void _onCreateController(QrReaderViewController controller) async {
     _controller = controller;
-    _controller.startCamera(_onQrBack);
+    startScan();
   }
 
   bool isScan = false;
@@ -88,28 +124,20 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
     await widget.onScan(data);
   }
 
-  void startScan() {
+  Future<void> startScan() async {
     isScan = false;
-    _controller.startCamera(_onQrBack);
+    await _controller?.startCamera(_onQrBack);
     _initAnimation();
   }
 
   void stopScan() {
+    _controller?.stopCamera();
     _clearAnimation();
-    if (openFlashlight == true) {
-      openFlashlight = false;
-      setState(() {
-        setFlashlight();
-      });
-    }
-
-    _controller.stopCamera();
   }
 
-  Future<bool?> setFlashlight() async {
-    setState(() async {
-      openFlashlight = await _controller.setFlashlight();
-    });
+  Future<bool> setFlashlight() async {
+    openFlashlight = await _controller?.setFlashlight() ?? false;
+    setState(() {});
     return openFlashlight;
   }
 
@@ -128,6 +156,14 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
 
   @override
   Widget build(BuildContext context) {
+    if (_init == false) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+        ),
+      );
+    }
     final flashOpen = Image.asset(
       "assets/flash_on.png",
       package: "qr_code_scanner2",
@@ -152,11 +188,13 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
         }
         return Stack(
           children: <Widget>[
-            QrReaderView(
-              width: constraints.maxWidth,
-              height: constraints.maxHeight,
-              callback: _onCreateController,
-            ),
+            _showScanView
+                ? QrReaderView(
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                    callback: _onCreateController,
+                  )
+                : Container(),
             widget.isAnimation
                 ? Positioned(
                     left: (constraints.maxWidth - qrScanSize) / 2,
@@ -164,8 +202,8 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
                     child: CustomPaint(
                       painter: QrScanBoxAnimationPainter(
                         boxLineColor: widget.boxLineColor!,
-                        animationValue: _animationController.value,
-                        isForward: _animationController.status ==
+                        animationValue: _animationController?.value ?? 0,
+                        isForward: _animationController?.status ==
                             AnimationStatus.forward,
                       ),
                       child: SizedBox(
@@ -251,7 +289,7 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
                         child: GestureDetector(
                           behavior: HitTestBehavior.translucent,
                           onTap: setFlashlight,
-                          child: openFlashlight! ? flashOpen : flashClose,
+                          child: openFlashlight ? flashOpen : flashClose,
                         ),
                       ),
                     ],
@@ -265,8 +303,9 @@ class QrcodeReaderViewState extends State<QrcodeReaderView>
 
   @override
   void dispose() {
+    print('dispose');
     _clearAnimation();
-    _controller.stopCamera();
+    // _controller.stopCamera();
     super.dispose();
   }
 }

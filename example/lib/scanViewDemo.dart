@@ -32,24 +32,15 @@ class _ScanViewDemoState extends State<ScanViewDemo> {
   }
 
   Future onScan(String data) async {
-    await Navigator.push(
-        context, MaterialPageRoute(builder: (context) => TestScreen()));
-    // await showCupertinoDialog(
-    //   context: context,
-    //   builder: (context) {
-    //     return CupertinoAlertDialog(
-    //       title: Text("Ket qua"),
-    //       content: Text(data),
-    //       actions: <Widget>[
-    //         CupertinoDialogAction(
-    //           child: Text("dong y"),
-    //           onPressed: () => Navigator.pop(context),
-    //         )
-    //       ],
-    //     );
-    //   },
-    // );
-    _key.currentState!.startScan();
+    if (data.length > 0) {
+      await Navigator.push(
+          context, MaterialPageRoute(builder: (context) => TestScreen()));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Ảnh không hợp lệ. Vui lòng thử lại"),
+      ));
+      _key.currentState!.startScan();
+    }
   }
 
   @override

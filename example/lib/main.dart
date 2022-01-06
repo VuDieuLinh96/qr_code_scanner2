@@ -17,43 +17,12 @@ class _MyAppState extends State<MyApp> {
     super.initState();
   }
 
-  bool _showScanView = false;
+  Future<void> _requestPermission() async {
+    var cameraStatus = await Permission.camera.status;
 
-  bool _openAction = false;
-
-  Future<bool> permission() async {
-    if (_openAction) return false;
-    _openAction = true;
-    var status = await Permission.camera.status;
-    print(status);
-    if (status.isDenied || status.isPermanentlyDenied) {
-      status = await Permission.camera.request();
-      print(status);
-    }
-
-    if (status.isRestricted) {
-      await Future.delayed(Duration(seconds: 3));
-      openAppSettings();
-      _openAction = false;
-      return false;
-    }
-
-    if (!status.isGranted) {
-      _openAction = false;
-      return false;
-    }
-    _openAction = false;
-    return true;
-  }
-
-  Future openScan(BuildContext context) async {
-    if (false == await permission()) {
-      return;
-    }
-
-    setState(() {
-      _showScanView = true;
-    });
+    if (!cameraStatus.isGranted) await Permission.camera.request();
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (context) => ScanViewDemo()));
   }
 
   @override
@@ -65,10 +34,7 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Center(
           child: InkWell(
-            onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => ScanViewDemo()));
-            },
+            onTap: _requestPermission,
             child: Container(
               width: 100,
               height: 100,
